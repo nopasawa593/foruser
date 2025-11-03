@@ -1,0 +1,1721 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจองสำหรับหมู่บ้าน</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- START: CUSTOM STYLES (IG Layout) --- */
+        
+        /* 1. กำหนดตัวแปรสีหลัก (Theme Color) */
+        :root {
+            --bs-primary: #035544; /* สีเขียวเข้ม (Dark Green) */
+            --bs-primary-rgb: 3, 85, 68;
+            --bs-primary-dark: #023a2f; /* สีเขียวเข้มกว่าสำหรับ Hover */
+            --bs-link-color: #035544;
+            --app-mid-green: #8DA58C;
+            --app-light-green: #D9E7D8;
+        }
+
+        /* 2. เปลี่ยน Font และสีพื้นหลัง */
+        body { 
+            font-family: 'Kanit', sans-serif;
+            background-color: var(--app-light-green); 
+        }
+        
+        .top-nav { 
+            position: fixed; top: 1rem; right: 1rem; z-index: 1050; display: flex; gap: 0.5rem; 
+        }
+        
+        /* 3. [NEW] IG Layout Container: บีบความกว้างให้เหมือน Feed */
+        .ig-layout {
+            max-width: 600px; /* บีบความกว้างสูงสุดเหมือนแอปมือถือ */
+            padding: 0;
+            margin-top: 5rem;
+            margin-bottom: 3rem;
+        }
+        @media (min-width: 600px) {
+            .ig-layout {
+                padding: 0; /* บน Desktop ไม่ต้องมี padding ด้านข้าง */
+            }
+        }
+
+        /* 4. [NEW] Header (ปรับใหม่) */
+        .main-header {
+            background: none; /* [NEW] ลบพื้นหลัง Header */
+            color: var(--bs-primary); /* [NEW] ใช้สีข้อความเข้ม */
+            padding: 1.5rem 1.5rem; 
+            border-radius: 0; 
+            text-align: center;
+            margin-bottom: 1.5rem; 
+            margin-top: 0; /* [NEW] ลบ margin-top (ย้ายไป .ig-layout) */
+            box-shadow: none; /* [NEW] ลบเงา */
+            border-bottom: 1px solid var(--app-mid-green); /* [NEW] เพิ่มเส้นคั่นสไตล์ IG */
+        }
+        .main-header h1 {
+            font-size: 1.75rem; /* [NEW] ลดขนาด H1 ลงเล็กน้อย */
+            font-weight: 500;
+        }
+        .main-header .lead {
+            font-size: 1rem;
+            font-weight: 300;
+        }
+
+        /* 5. [NEW] IG Feed Container */
+        .ig-feed {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem; /* ระยะห่างระหว่าง "โพสต์" */
+            padding: 0 0.5rem; /* เพิ่ม padding ข้างเล็กน้อยบนมือถือ */
+        }
+        @media (min-width: 600px) {
+            .ig-feed {
+                padding: 0; /* บน Desktop ไม่ต้องมี padding */
+            }
+        }
+        
+        /* 6. [NEW] "Post" Card Style (ปรับ .choice-card) */
+        .choice-card {
+            background-color: #ffffff; 
+            border-radius: 1rem; 
+            padding: 0; /* [NEW] ลบ padding หลัก (จะไปใส่ใน header/body) */
+            text-align: left; /* [NEW] ข้อความชิดซ้าย */
+            cursor: pointer; 
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); 
+            border: none; 
+            display: flex; 
+            flex-direction: column; 
+        }
+        
+        .choice-card:hover { 
+            transform: translateY(-8px); 
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12); 
+        }
+        
+        /* 7. [NEW] "Post" Header (Icon + Title) */
+        .choice-card-header {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            gap: 0.75rem;
+            border-bottom: 1px solid #f0f0f0; /* [NEW] เส้นคั่นบางๆ */
+        }
+
+        .choice-card-header i { 
+            font-size: 2.5rem; /* [NEW] ปรับขนาดไอคอน (เหมือนรูปโปรไฟล์) */
+            color: var(--bs-primary);
+            margin: 0;
+        }
+
+        .choice-card-header-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .choice-card-header-text h3 {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 0;
+            line-height: 1.2;
+            font-size: 1.25rem;
+        }
+        
+        /* 8. [NEW] "Post" Body (Description) */
+        .choice-card-body {
+            padding: 1rem;
+        }
+
+        .choice-card-body p {
+            margin-bottom: 0;
+            color: #555;
+            font-weight: 300;
+        }
+        
+        /* 9. [NEW] Calendar Container (ปรับให้เหมือน "Post") */
+        .calendar-container { 
+            background-color: #ffffff; 
+            padding: 1.5rem;
+            border-radius: 1rem; 
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border: none;
+            margin: 1.5rem 0.5rem 0 0.5rem; /* [NEW] เพิ่มระยะห่างบน */
+        }
+        @media (min-width: 600px) {
+            .calendar-container {
+                margin: 1.5rem 0 0 0;
+            }
+        }
+        
+        .calendar-header { 
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; 
+        }
+        .calendar-body { 
+            display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; 
+        }
+        .calendar-day, .calendar-day-header { 
+            text-align: center; padding: 0.5rem; 
+        }
+        .calendar-day { 
+            border-radius: 50%; width: 40px; height: 40px; 
+            display: flex; justify-content: center; align-items: center; 
+            margin: auto; 
+        }
+        
+        .calendar-day.car-booked { background-color: #dc3545; color: white; font-weight: bold; }
+        .calendar-day.facility-booked { background-color: #0d6efd; color: white; font-weight: bold; }
+        .calendar-day.both-booked { background: linear-gradient(45deg, #dc3545 50%, #0d6efd 50%); color: white; font-weight: bold; }
+        
+        .calendar-day.all-checked-out { 
+            background-color: var(--app-mid-green); 
+            color: white; 
+            font-weight: bold; 
+        }
+        .calendar-day[data-day-str] { cursor: pointer; }
+
+        .loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.6); z-index: 1060;
+            display: none; justify-content: center; align-items: center;
+        }
+        
+        /* 10. Admin Styles (ยังคงเดิม) */
+        .admin-header { 
+            background: var(--bs-primary); 
+            box-shadow: 0 6px 20px rgba(var(--bs-primary-rgb), 0.25); 
+            color: white; /* [FIX] เพิ่มบรรทัดนี้เพื่อให้ตัวหนังสือสีขาว */
+        }
+
+        /* [NEW] เปลี่ยนสีหัวข้อการ์ดในหน้า Admin ให้เป็นสีเขียว */
+        .admin-card .card-header {
+            color: var(--bs-primary);
+            font-weight: 500; /* ปรับความหนาเล็กน้อย */
+            background-color: #f8f9fa; /* สีพื้นหลังหัวการ์ด */
+        }
+
+        .admin-card { 
+            background-color: #ffffff; 
+            border-radius: 1rem; 
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); 
+            border: none; 
+            margin-bottom: 2rem; 
+        }
+        .category-edit-card { 
+            border-left: 4px solid var(--app-mid-green); 
+        }
+        
+        .action-cell { min-width: 110px; text-align: right;}
+        .info-btn { margin-left: 5px; }
+
+        /* 11. Modal Styles (ยังคงเดิม) */
+        .modal-content {
+            border-radius: 1rem; 
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            border: none;
+        }
+        .modal-header {
+            background-color: #f8f9fa; 
+            border-bottom: 1px solid #dee2e6;
+            border-top-left-radius: 1rem; 
+            border-top-right-radius: 1rem; 
+        }
+        .modal-header .modal-title {
+            font-weight: 500; 
+            color: #333;
+        }
+        /* --- END: CUSTOM STYLES --- */
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay"><div class="spinner-border text-light" role="status"></div></div>
+    
+    <div class="top-nav">
+        <button class="btn btn-light btn-sm" id="langSwitchBtn" data-translate-key="langSwitch">EN</button>
+        <button class="btn btn-info" id="myBookingsBtn" data-bs-toggle="modal" data-bs-target="#myBookingsModal" data-translate-key="myBookings"><i class="bi bi-person-lines-fill"></i> การจองของฉัน</button>
+        <button class="btn btn-secondary" id="adminLoginBtn" data-bs-toggle="modal" data-bs-target="#loginModal" data-translate-key="adminLogin"><i class="bi bi-person-circle"></i> Admin Login</button>
+    </div>
+
+    <div class="container ig-layout" id="userView">
+        <header class="main-header">
+    <h1 id="mainTitleDisplay"><i class="bi bi-house-heart-fill"></i> ระบบจองสำหรับหมู่บ้าน</h1>
+    <p class="lead" id="mainSubtitleDisplay" data-translate-key="mainSubtitle">เลือกบริการที่ท่านต้องการและตรวจสอบวันว่างในปฏิทิน</p>
+</header>
+<div id="choiceCardContainer" class="ig-feed">
+            </div>
+        <div class="calendar-container">
+             <h4 class="text-center mb-3" data-translate-key="calendarTitle">ปฏิทินวันจอง (Booked Dates)</h4>
+            <div class="d-flex justify-content-center align-items-center flex-wrap mb-3">
+                </div>
+            <div class="calendar-header">
+                <button id="prev-month-btn" class="btn btn-outline-primary">&lt;</button>
+                <h5 id="month-year" class="mb-0"></h5>
+                <button id="next-month-btn" class="btn btn-outline-primary">&gt;</button>
+            </div>
+            <div id="calendar-days-header" class="calendar-body"></div>
+            <div id="calendar-body" class="calendar-body mt-2"></div>
+        </div>
+    </div>
+
+    <div class="container ig-layout" id="adminView" style="display: none;">
+        <header class="main-header admin-header">
+            <h1 data-translate-key="adminPanelTitle"><i class="bi bi-shield-lock-fill"></i> Admin Panel</h1>
+            <p class="lead" data-translate-key="adminPanelSubtitle">ระบบจัดการหมวดหมู่และรายการจอง</p>
+        </header>
+
+        <div class="card admin-card">
+            <div class="card-header fw-bold" data-translate-key="homepageHeaderMgmt">จัดการข้อความหน้าแรก (Homepage Header)</div>
+            <div class="card-body">
+                <form id="settingsForm">
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="settingMainTitle" placeholder="หัวข้อหลัก" required>
+                        <label for="settingMainTitle" data-translate-key="mainTitleLabel">หัวข้อหลัก (Main Title)</label>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <textarea class="form-control" id="settingMainSubtitle" placeholder="คำอธิบาย" style="height: 100px"></textarea>
+                        <label for="settingMainSubtitle" data-translate-key="subtitleLabel">คำอธิบาย (Subtitle)</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="saveSettingsBtn" data-translate-key="saveSettingsBtn"><i class="bi bi-save"></i> บันทึกข้อความ</button>
+                </form>
+            </div>
+        </div>
+        <div class="card admin-card">
+            <div class="card-header fw-bold" data-translate-key="categoryMgmt">จัดการหมวดหมู่ (Manage Categories)</div>
+            <div class="card-body">
+                <div id="category-list" class="mb-4">
+                    </div>
+                <button class="btn btn-success" id="addCategoryBtn" data-translate-key="addCategoryBtn"><i class="bi bi-plus-circle"></i> เพิ่มหมวดหมู่ใหม่</button>
+            </div>
+        </div>
+
+        <div class="card admin-card">
+            <div class="card-header fw-bold" data-translate-key="bookingReportTitle">
+                <i class="bi bi-clipboard-data-fill"></i> รายงานการจองทั้งหมด (Booking Report)
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover small">
+                        <thead>
+                            <tr>
+                                <th data-translate-key="reportStatus">สถานะ</th>
+                                <th data-translate-key="reportStartDate">วันที่จอง (เริ่ม)</th>
+                                <th data-translate-key="reportTime">เวลา</th>
+                                <th data-translate-key="reportCategory">หมวดหมู่</th>
+                                <th data-translate-key="reportItem">รายการ</th>
+                                <th data-translate-key="reportBookerName">ชื่อผู้จอง</th>
+                                <th data-translate-key="reportHouseNo">บ้านเลขที่</th>
+                                <th data-translate-key="reportPhone">เบอร์โทร</th>
+                                <th data-translate-key="reportActions">ดำเนินการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bookingReportTableBody">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center">
+            <button class="btn btn-danger" id="logoutBtn" data-translate-key="logoutBtn"><i class="bi bi-box-arrow-right"></i> ออกจากระบบ</button>
+        </div>
+    </div>
+
+    <div class="modal fade" id="loginModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title" data-translate-key="adminLoginTitle">Admin Login</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <form id="loginForm">
+                        <div class="form-floating mb-3"><input type="text" class="form-control" id="username" placeholder="Username" required><label for="username" data-translate-key="usernameLabel">ชื่อผู้ใช้</label></div>
+                        <div class="form-floating mb-3"><input type="password" class="form-control" id="password" placeholder="Password" required><label for="password" data-translate-key="passwordLabel">รหัสผ่าน</label></div>
+                        <div class="d-grid"><button class="btn btn-primary btn-lg" type="submit" data-translate-key="loginSubmit">เข้าสู่ระบบ</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="bookingModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title" id="bookingModalTitle"></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <form id="bookingForm">
+                        <input type="hidden" name="categoryName">
+                        <div class="mb-3"><label class="form-label" data-translate-key="nameLabel">ชื่อ-นามสกุล</label><input type="text" class="form-control" name="name" required></div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3"><label class="form-label" data-translate-key="houseNoLabel">บ้านเลขที่</label><input type="text" class="form-control" name="houseNumber" required></div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label" data-translate-key="phoneLabel">เบอร์โทรติดต่อ</label>
+                                <input type="tel" class="form-control" name="phone" required pattern="[0-9]{10}" maxlength="10" title="กรุณากรอกเบอร์โทรศัพท์มือถือ 10 หลัก" data-translate-title-key="phonePatternTitle">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label" data-translate-key="dateLabel">วันที่</label>
+                                <input type="text" class="form-control" name="bookingDate" placeholder="กรุณาเลือกวันที่..." required data-translate-placeholder-key="datePlaceholder">
+                                <div class="form-text text-danger date-closure-notice mt-1"></div>
+                            </div>
+                            <div class="col-md-6 mb-3 form-fields-car"><label class="form-label" data-translate-key="timeLabel">เวลา</label><input type="time" class="form-control" name="bookingTime"><div class="form-text text-danger availability-notice mt-1"></div></div>
+                            <div class="col-md-3 mb-3 form-fields-facility"><label class="form-label" data-translate-key="startTimeLabel">เวลาเริ่มต้น</label><input type="time" class="form-control" name="startTime"></div>
+                            <div class="col-md-3 mb-3 form-fields-facility"><label class="form-label" data-translate-key="endTimeLabel">เวลาสิ้นสุด</label><input type="time" class="form-control" name="endTime"></div>
+                        </div>
+
+                        <div class="mb-3"><label class="form-label" data-translate-key="itemSelectLabel">เลือกรายการ</label><select class="form-select" name="itemName" required></select></div>
+
+                        <div id="generalClosureNotice" class="alert alert-warning" style="display: none; font-size: 0.9rem;">
+                            </div>
+
+                        <div class="form-fields-facility"><div class="form-text text-danger availability-notice mb-3"></div></div>
+                        <div class="mb-3 form-fields-car"><label class="form-label" data-translate-key="destinationLabel">สถานที่/จุดหมายปลายทาง</label><textarea class="form-control" name="destination" rows="2"></textarea></div>
+                        <div class="mb-3 form-fields-car"><label class="form-label" data-translate-key="passengersLabel">จำนวนผู้โดยสาร</label><input type="number" class="form-control" name="passengers" min="1"></div>
+
+                        <div class="mb-3"><label class="form-label" data-translate-key="fileLabel">แนบไฟล์ (ถ้ามี)</label><input class="form-control" type="file" name="file"></div>
+                        <button type="submit" class="btn btn-primary w-100" data-translate-key="submitBookingBtn">ยืนยันการจอง</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="categoryModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                 <div class="modal-header"><h5 class="modal-title" id="categoryModalTitle"></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                 <div class="modal-body">
+                    <form id="categoryForm">
+                        <input type="hidden" id="originalCategoryName">
+                        <div class="row">
+                            <div class="col-md-12 mb-3"><label class="form-label" data-translate-key="categoryNameLabel">ชื่อหมวดหมู่</label><input type="text" class="form-control" id="categoryName" required></div>
+                            <input type="hidden" id="categoryIcon"> </div>
+                        <div class="mb-3"><label class="form-label" data-translate-key="descriptionLabel">คำอธิบาย</label><textarea class="form-control" id="categoryDescription" rows="2"></textarea></div>
+                         <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label" data-translate-key="formTypeLabel">ประเภทฟอร์ม</label>
+                                <select class="form-select" id="categoryFormType">
+                                    <option value="Car" data-translate-key="formTypeCar">เวลาเดียว</option>
+                                    <option value="Facility" data-translate-key="formTypeFacility">ช่วงเวลา</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3 d-flex align-items-end"><div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="categoryAllowDuplicates">
+                                <label class="form-check-label" for="categoryAllowDuplicates" data-translate-key="allowDuplicatesLabel">อนุญาตให้จองซ้ำได้</label>
+                            </div></div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" data-translate-key="closedDaysLabel">วันที่ปิดจองประจำ (ไม่บังคับ)</label>
+                            <div id="closedDaysCheckboxes" class="d-flex flex-wrap gap-3 border p-2 rounded">
+                                <div class="form-check"><input class="form-check-input" type="checkbox" value="0" id="day-sun"><label class="form-check-label" for="day-sun" data-translate-key="daySun">อา.</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" value="1" id="day-mon"><label class="form-check-label" for="day-mon" data-translate-key="dayMon">จ.</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" value="2" id="day-tue"><label class="form-check-label" for="day-tue" data-translate-key="dayTue">อ.</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" value="3" id="day-wed"><label class="form-check-label" for="day-wed" data-translate-key="dayWed">พ.</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" value="4" id="day-thu"><label class="form-check-label" for="day-thu" data-translate-key="dayThu">พฤ.</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" value="5" id="day-fri"><label class="form-check-label" for="day-fri" data-translate-key="dayFri">ศ.</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" value="6" id="day-sat"><label class="form-check-label" for="day-sat" data-translate-key="daySat">ส.</label></div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" data-translate-key="closedMonthsLabel">เดือนที่ปิดจอง (ไม่บังคับ)</label>
+                            <div id="closedMonthsCheckboxes" class="d-flex flex-wrap gap-3 border p-2 rounded">
+                                <div class="form-check"><input class="form-check-input" type="checkbox" value="0" id="month-jan"><label class="form-check-label" for="month-jan" data-translate-key="monthJan">ม.ค.</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" value="1" id="month-feb"><label class="form-check-label" for="month-feb" data-translate-key="monthFeb">ก.พ.</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" value="2" id="month-mar"><label class="form-check-label" for="month-mar" data-translate-key="monthMar">มี.ค.</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" value="3" id="month-apr"><label class="form-check-label" for="month-apr" data-translate-key="monthApr">เม.ย.</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" value="4" id="month-may"><label class="form-check-label" for="month-may" data-translate-key="monthMay">พ.ค.</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" value="5" id="month-jun"><label class="form-check-label" for="month-jun" data-translate-key="monthJun">มิ.ย.</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" value="6" id="month-jul"><label class="form-check-label" for="month-jul" data-translate-key="monthJul">ก.ค.</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" value="7" id="month-aug"><label class="form-check-label" for="month-aug" data-translate-key="monthAug">ส.ค.</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" value="8" id="month-sep"><label class="form-check-label" for="month-sep" data-translate-key="monthSep">ก.ย.</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" value="9" id="month-oct"><label class="form-check-label" for="month-oct" data-translate-key="monthOct">ต.ค.</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" value="10" id="month-nov"><label class="form-check-label" for="month-nov" data-translate-key="monthNov">พ.ย.</label></div>
+                                <div class="form-check"><input class="form-check-input" type="checkbox" value="11" id="month-dec"><label class="form-check-label" for="month-dec" data-translate-key="monthDec">ธ.ค.</label></div>
+                            </div>
+                        </div>
+
+                        <hr>
+                        <h5 class="mt-4" data-translate-key="itemMgmtTitle">จัดการรายการในหมวดหมู่นี้</h5>
+                        <div id="item-management-section">
+                            <ul class="list-group mb-3" id="itemList"></ul>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="newItemName" placeholder="ชื่อรายการใหม่" data-translate-placeholder-key="newItemPlaceholder">
+                                <button class="btn btn-primary" type="button" id="addItemBtn" data-translate-key="addItemBtn">เพิ่มรายการ</button>
+                            </div>
+                        </div>
+                    </form>
+                 </div>
+                 <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-translate-key="cancelBtn">ยกเลิก</button>
+                    <button type="button" class="btn btn-primary" id="saveCategoryBtn" data-translate-key="saveBtn">บันทึก</button>
+                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="resultModal" tabindex="-1">
+         <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title" id="resultModalLabel" data-translate-key="modalStatusTitle">สถานะ</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body" id="resultModalBody"></div>
+                <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-translate-key="modalCloseBtn">ปิด</button></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="myBookingsModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title" data-translate-key="myBookingsModalTitle">การจองของฉัน</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <form id="myBookingsForm">
+                        <div class="form-floating mb-3">
+                            <input type="tel" class="form-control" id="checkPhone" placeholder="เบอร์โทรติดต่อ" required pattern="[0-9]{10}" maxlength="10" title="กรุณากรอกเบอร์โทรศัพท์มือถือ 10 หลัก" data-translate-title-key="phonePatternTitle">
+                            <label for="checkPhone" data-translate-key="checkPhoneLabel">เบอร์โทรติดต่อ</label>
+                        </div>
+                        <div class="d-grid">
+                            <button class="btn btn-primary btn-lg" type="submit" data-translate-key="searchBookingBtn">ค้นหาการจอง</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="myBookingsListModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title" data-translate-key="myBookingsListTitle">รายการจองของคุณ</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <p class="text-muted" data-translate-key="myBookingsListDesc">นี่คือรายการจองทั้งหมดที่ตรงกับเบอร์โทรของคุณ</p>
+                    <ul class="list-group" id="myBookingsList">
+                        </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#myBookingsModal" data-translate-key="myBookingsGoBackBtn">กลับไปค้นหาใหม่</button>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" data-translate-key="myBookingsCloseBtn">ปิด</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="dayDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title" id="dayDetailsModalTitle" data-translate-key="dayDetailsModalTitle">รายละเอียดการจอง</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <ul class="list-group" id="dayDetailsList">
+                        </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-translate-key="dayDetailsCloseBtn">ปิด</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/th.js"></script>
+    <script>
+    // Self-executing anonymous function to encapsulate code
+    (() => {
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzcLvAGs68cgXsg72xLqfq2ieFt6htjLaYJD6q5kjKP9Jd_WyZo8-Ugqi-q3vh046rx/exec';
+
+        const translations = {
+            'th': {
+                'langSwitch': 'EN',
+                'myBookings': '<i class="bi bi-person-lines-fill"></i> การจองของฉัน',
+                'adminLogin': '<i class="bi bi-person-circle"></i> Admin Login',
+                'mainSubtitle': 'เลือกบริการที่ท่านต้องการและตรวจสอบวันว่างในปฏิทิน',
+                'calendarTitle': 'ปฏิทินวันจอง (Booked Dates)',
+                'adminPanelTitle': '<i class="bi bi-shield-lock-fill"></i> Admin Panel',
+                'adminPanelSubtitle': 'ระบบจัดการหมวดหมู่และรายการจอง',
+                'homepageHeaderMgmt': 'จัดการข้อความหน้าแรก (Homepage Header)',
+                'mainTitleLabel': 'หัวข้อหลัก (Main Title)',
+                'subtitleLabel': 'คำอธิบาย (Subtitle)',
+                'saveSettingsBtn': '<i class="bi bi-save"></i> บันทึกข้อความ',
+                'categoryMgmt': 'จัดการหมวดหมู่ (Manage Categories)',
+                'addCategoryBtn': '<i class="bi bi-plus-circle"></i> เพิ่มหมวดหมู่ใหม่',
+                'bookingReportTitle': '<i class="bi bi-clipboard-data-fill"></i> รายงานการจองทั้งหมด (Booking Report)',
+                'reportStatus': 'สถานะ',
+                'reportStartDate': 'วันที่จอง (เริ่ม)',
+                'reportTime': 'เวลา',
+                'reportCategory': 'หมวดหมู่',
+                'reportItem': 'รายการ',
+                'reportBookerName': 'ชื่อผู้จอง',
+                'reportHouseNo': 'บ้านเลขที่',
+                'reportPhone': 'เบอร์โทร',
+                'reportActions': 'ดำเนินการ',
+                'logoutBtn': '<i class="bi bi-box-arrow-right"></i> ออกจากระบบ',
+                'adminLoginTitle': 'Admin Login',
+                'usernameLabel': 'ชื่อผู้ใช้',
+                'passwordLabel': 'รหัสผ่าน',
+                'loginSubmit': 'เข้าสู่ระบบ',
+                'nameLabel': 'ชื่อ-นามสกุล',
+                'houseNoLabel': 'บ้านเลขที่',
+                'phoneLabel': 'เบอร์โทรติดต่อ',
+                'phonePatternTitle': 'กรุณากรอกเบอร์โทรศัพท์มือถือ 10 หลัก',
+                'itemSelectLabel': 'เลือกรายการ',
+                'dateLabel': 'วันที่',
+                'datePlaceholder': 'กรุณาเลือกวันที่...',
+                'timeLabel': 'เวลา',
+                'startTimeLabel': 'เวลาเริ่มต้น',
+                'endTimeLabel': 'เวลาสิ้นสุด',
+                'destinationLabel': 'สถานที่/จุดหมายปลายทาง',
+                'passengersLabel': 'จำนวนผู้โดยสาร',
+                'fileLabel': 'แนบไฟล์ (ถ้ามี)',
+                'submitBookingBtn': 'ยืนยันการจอง',
+                'categoryModalTitleAdd': 'เพิ่มหมวดหมู่ใหม่',
+                'categoryModalTitleEdit': 'แก้ไขหมวดหมู่',
+                'categoryNameLabel': 'ชื่อหมวดหมู่',
+                'descriptionLabel': 'คำอธิบาย',
+                'formTypeLabel': 'ประเภทฟอร์ม',
+                'formTypeCar': 'เวลาเดียว',
+                'formTypeFacility': 'ช่วงเวลา',
+                'allowDuplicatesLabel': 'อนุญาตให้จองซ้ำได้',
+                'closedDaysLabel': 'วันที่ปิดจองประจำ (ไม่บังคับ)',
+                'daySun': 'อา.', 'dayMon': 'จ.', 'dayTue': 'อ.', 'dayWed': 'พ.', 'dayThu': 'พฤ.', 'dayFri': 'ศ.', 'daySat': 'ส.',
+                'closedMonthsLabel': 'เดือนที่ปิดจอง (ไม่บังคับ)',
+                'monthJan': 'ม.ค.', 'monthFeb': 'ก.พ.', 'monthMar': 'มี.ค.', 'monthApr': 'เม.ย.', 'monthMay': 'พ.ค.', 'monthJun': 'มิ.ย.',
+                'monthJul': 'ก.ค.', 'monthAug': 'ส.ค.', 'monthSep': 'ก.ย.', 'monthOct': 'ต.ค.', 'monthNov': 'พ.ย.', 'monthDec': 'ธ.ค.',
+                'itemMgmtTitle': 'จัดการรายการในหมวดหมู่นี้',
+                'newItemPlaceholder': 'ชื่อรายการใหม่',
+                'addItemBtn': 'เพิ่มรายการ',
+                'cancelBtn': 'ยกเลิก',
+                'saveBtn': 'บันทึก',
+                'modalStatusTitle': 'สถานะ',
+                'modalCloseBtn': 'ปิด',
+                'myBookingsModalTitle': 'การจองของฉัน',
+                'checkPhoneLabel': 'เบอร์โทรติดต่อ',
+                'searchBookingBtn': 'ค้นหาการจอง',
+                'myBookingsListTitle': 'รายการจองของคุณ',
+                'myBookingsListDesc': 'นี่คือรายการจองทั้งหมดที่ตรงกับเบอร์โทรของคุณ',
+                'myBookingsGoBackBtn': 'กลับไปค้นหาใหม่',
+                'myBookingsCloseBtn': 'ปิด',
+                'dayDetailsModalTitle': 'รายละเอียดการจอง',
+                'dayDetailsCloseBtn': 'ปิด',
+                'noBookingsFound': 'ไม่พบรายการจองสำหรับเบอร์โทรนี้',
+                'noBookingsForDay': 'ไม่พบข้อมูลการจองสำหรับวันนี้',
+                'bookedBy': 'จองโดย',
+                'statusSuccess': 'สำเร็จ',
+                'statusError': 'เกิดข้อผิดพลาด',
+                'confirmCheckout': 'ยืนยันการ Check Out / คืนของ สำหรับการจอง ID: {bookingId} หรือไม่?',
+                'checkoutSuccess': 'การจอง {bookingId} ถูก Check Out เรียบร้อยแล้ว',
+                'checkoutError': 'ยังไม่สามารถ Check Out ได้',
+                'checkoutInfoPrefix': 'รายการนี้เสร็จสิ้นเมื่อ:',
+                'closureMonthWarning': 'กรุณาระบุเดือนที่ปิดจอง หากมีการเลือกวันที่ปิดจอง',
+                'saveSettingsSuccess': 'บันทึกข้อความหน้าแรกเรียบร้อยแล้ว',
+                'bookingSuccess': 'บันทึกการจองเรียบร้อยแล้ว',
+                'cancelBookingConfirm': 'คุณแน่ใจหรือไม่ว่าต้องการยกเลิกการจองนี้?',
+                'cancelBookingSuccess': 'ยกเลิกการจองเรียบร้อยแล้ว',
+                'sessionExpired': 'เซสชั่นหมดอายุ กรุณาเข้าสู่ระบบใหม่อีกครั้ง',
+                'ERR_CLOSED_DAY': 'วันที่เลือกเป็นวันที่ปิดทำการจองสำหรับหมวดหมู่นี้',
+                'ERR_BOOKING_CONFLICT': 'การจองซ้ำ! รายการนี้ถูกจองไปแล้วในวันและเวลาที่เลือก',
+                'ERR_LOGIN_FAILED': 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง',
+                'ERR_NOT_FOUND': 'ไม่พบข้อมูล',
+                'defaultError': 'เกิดข้อผิดพลาด'
+            },
+            'en': {
+                'langSwitch': 'ไทย',
+                'myBookings': '<i class="bi bi-person-lines-fill"></i> My Bookings',
+                'adminLogin': '<i class="bi bi-person-circle"></i> Admin Login',
+                'mainSubtitle': 'Select your desired service and check the calendar for availability',
+                'calendarTitle': 'Booking Calendar (Booked Dates)',
+                'adminPanelTitle': '<i class="bi bi-shield-lock-fill"></i> Admin Panel',
+                'adminPanelSubtitle': 'Category and Booking Management System',
+                'homepageHeaderMgmt': 'Manage Homepage Header',
+                'mainTitleLabel': 'Main Title',
+                'subtitleLabel': 'Subtitle',
+                'saveSettingsBtn': '<i class="bi bi-save"></i> Save Settings',
+                'categoryMgmt': 'Manage Categories',
+                'addCategoryBtn': '<i class="bi bi-plus-circle"></i> Add New Category',
+                'bookingReportTitle': '<i class="bi bi-clipboard-data-fill"></i> All Bookings Report',
+                'reportStatus': 'Status',
+                'reportStartDate': 'Booking Date (Start)',
+                'reportTime': 'Time',
+                'reportCategory': 'Category',
+                'reportItem': 'Item',
+                'reportBookerName': 'Booker Name',
+                'reportHouseNo': 'House No.',
+                'reportPhone': 'Phone',
+                'reportActions': 'Actions',
+                'logoutBtn': '<i class="bi bi-box-arrow-right"></i> Logout',
+                'adminLoginTitle': 'Admin Login',
+                'usernameLabel': 'Username',
+                'passwordLabel': 'Password',
+                'loginSubmit': 'Login',
+                'nameLabel': 'Full Name',
+                'houseNoLabel': 'House No.',
+                'phoneLabel': 'Contact Phone',
+                'phonePatternTitle': 'Please enter a 10-digit mobile number',
+                'itemSelectLabel': 'Select Item',
+                'dateLabel': 'Date',
+                'datePlaceholder': 'Please select a date...',
+                'timeLabel': 'Time',
+                'startTimeLabel': 'Start Time',
+                'endTimeLabel': 'End Time',
+                'destinationLabel': 'Destination',
+                'passengersLabel': 'Passengers',
+                'fileLabel': 'Attach File (Optional)',
+                'submitBookingBtn': 'Confirm Booking',
+                'categoryModalTitleAdd': 'Add New Category',
+                'categoryModalTitleEdit': 'Edit Category',
+                'categoryNameLabel': 'Category Name',
+                'descriptionLabel': 'Description',
+                'formTypeLabel': 'Form Type',
+                'formTypeCar': 'Single Time',
+                'formTypeFacility': 'Time Range',
+                'allowDuplicatesLabel': 'Allow duplicate bookings',
+                'closedDaysLabel': 'Recurring Closed Days (Optional)',
+                'daySun': 'Sun', 'dayMon': 'Mon', 'dayTue': 'Tue', 'dayWed': 'Wed', 'dayThu': 'Thu', 'dayFri': 'Fri', 'daySat': 'Sat',
+                'closedMonthsLabel': 'Recurring Closed Months (Optional)',
+                'monthJan': 'Jan', 'monthFeb': 'Feb', 'monthMar': 'Mar', 'monthApr': 'Apr', 'monthMay': 'May', 'monthJun': 'Jun',
+                'monthJul': 'Jul', 'monthAug': 'Aug', 'monthSep': 'Sep', 'monthOct': 'Oct', 'monthNov': 'Nov', 'monthDec': 'Dec',
+                'itemMgmtTitle': 'Manage Items in this Category',
+                'newItemPlaceholder': 'New item name',
+                'addItemBtn': 'Add Item',
+                'cancelBtn': 'Cancel',
+                'saveBtn': 'Save',
+                'modalStatusTitle': 'Status',
+                'modalCloseBtn': 'Close',
+                'myBookingsModalTitle': 'My Bookings',
+                'checkPhoneLabel': 'Contact Phone',
+                'searchBookingBtn': 'Search Bookings',
+                'myBookingsListTitle': 'Your Bookings',
+                'myBookingsListDesc': 'Here are all bookings matching your phone number.',
+                'myBookingsGoBackBtn': 'Search Again',
+                'myBookingsCloseBtn': 'Close',
+                'dayDetailsModalTitle': 'Booking Details',
+                'dayDetailsCloseBtn': 'Close',
+                'noBookingsFound': 'No bookings found for this phone number.',
+                'noBookingsForDay': 'No booking data found for this day.',
+                'bookedBy': 'Booked by',
+                'statusSuccess': 'Success',
+                'statusError': 'Error',
+                'confirmCheckout': 'Confirm Check Out for booking ID: {bookingId}?',
+                'checkoutSuccess': 'Booking {bookingId} has been checked out.',
+                'checkoutError': 'Could not check out',
+                'checkoutInfoPrefix': 'This item was checked out at:',
+                'closureMonthWarning': 'Please select closed months if you select closed days.',
+                'saveSettingsSuccess': 'Homepage settings saved successfully.',
+                'bookingSuccess': 'Booking saved successfully.',
+                'cancelBookingConfirm': 'Are you sure you want to cancel this booking?',
+                'cancelBookingSuccess': 'Booking cancelled.',
+                'sessionExpired': 'Session expired. Please log in again.',
+                'ERR_CLOSED_DAY': 'The selected date is a closed day for this category.',
+                'ERR_BOOKING_CONFLICT': 'Booking conflict! This item is already booked at the selected date and time.',
+                'ERR_LOGIN_FAILED': 'Invalid username or password.',
+                'ERR_NOT_FOUND': 'Data not found.',
+                'defaultError': 'An error occurred.'
+            }
+        };
+        // --- END NEW ---
+
+
+        // --- State Management ---
+        let AppData = { categories: [], items: {}, bookings: {}, allBookings: [], settings: {}, activeBookingsByItem: {} }; // <-- NEW: เพิ่ม activeBookingsByItem
+        let authToken = null;
+        let currentUserPhone = null;
+        let currentLang = 'th'; // <-- NEW: Add language state
+
+        // --- DOM Elements ---
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const userView = document.getElementById('userView');
+        const adminView = document.getElementById('adminView');
+        const choiceCardContainer = document.getElementById('choiceCardContainer');
+        const calendarBody = document.getElementById('calendar-body');
+        const monthYearEl = document.getElementById('month-year');
+        const myBookingsBtn = document.getElementById('myBookingsBtn');
+        const adminLoginBtn = document.getElementById('adminLoginBtn');
+
+
+        // --- Modals ---
+        const resultModal = new bootstrap.Modal(document.getElementById('resultModal'));
+        const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+        const bookingModal = new bootstrap.Modal(document.getElementById('bookingModal'));
+        const categoryModal = new bootstrap.Modal(document.getElementById('categoryModal'));
+        const myBookingsModal = new bootstrap.Modal(document.getElementById('myBookingsModal'));
+        const myBookingsListModal = new bootstrap.Modal(document.getElementById('myBookingsListModal'));
+        const dayDetailsModal = new bootstrap.Modal(document.getElementById('dayDetailsModal'));
+
+        // ADDED: flatpickr instance variable
+        let bookingDateFlatpickrInstance = null;
+
+        // --- Sanitizer Function ---
+        const sanitizeHTML = (text) => {
+            if (typeof text !== 'string') return text;
+            const temp = document.createElement('div');
+            temp.textContent = text;
+            // FIX: Add .replace(/'/g, '&#39;') to handle single quotes
+            return temp.innerHTML.replace(/'/g, '&#39;');
+        };
+        
+        // --- NEW: Translation Helper Functions ---
+
+        /**
+         * (NEW) Helper function to get translation by key
+         */
+        function t(key, replacements = {}) {
+            let translation = translations[currentLang][key] || key;
+            for (const placeholder in replacements) {
+                translation = translation.replace(`{${placeholder}}`, replacements[placeholder]);
+            }
+            return translation;
+        }
+
+        /**
+         * (NEW) Main function to apply translations to the DOM
+         */
+        function setLanguage(lang) {
+            if (lang !== 'th' && lang !== 'en') lang = 'th';
+            currentLang = lang;
+            localStorage.setItem('bookingLang', lang); // Save preference
+
+            // Update all elements with data-translate-key
+            document.querySelectorAll('[data-translate-key]').forEach(el => {
+                const key = el.dataset.translateKey;
+                const translation = t(key);
+                if (translation) {
+                    // Handle input placeholders
+                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                        el.placeholder = translation;
+                    }
+                    // Handle input/button values
+                    else if (el.tagName === 'BUTTON' || (el.tagName === 'INPUT' && (el.type === 'submit' || el.type === 'button'))) {
+                        el.innerHTML = translation; // Use innerHTML to support icons
+                    }
+                    // Handle option text
+                    else if (el.tagName === 'OPTION') {
+                         el.textContent = translation;
+                    }
+                    // Handle pattern titles
+                    else if (el.dataset.translateTitleKey) {
+                        el.title = t(el.dataset.translateTitleKey);
+                    }
+                    else {
+                        el.innerHTML = translation; // Use innerHTML to support icons
+                    }
+                }
+            });
+            
+            // Handle specific cases
+            document.querySelectorAll('[data-translate-title-key]').forEach(el => {
+                 el.title = t(el.dataset.translateTitleKey);
+            });
+            document.querySelectorAll('[data-translate-placeholder-key]').forEach(el => {
+                 el.placeholder = t(el.dataset.translatePlaceholderKey);
+            });
+
+            // Update lang switch button text
+            document.getElementById('langSwitchBtn').textContent = t('langSwitch');
+
+            // (IMPORTANT) Update Flatpickr locale
+            const flatpickrLocale = (lang === 'th') ? flatpickr.l10ns.th : flatpickr.l10ns.default;
+if (bookingDateFlatpickrInstance) {
+    bookingDateFlatpickrInstance.set('locale', flatpickrLocale); // <--- แก้เป็น .set()
+}
+
+            // Re-render dynamic components that depend on language
+            if (authToken) {
+                renderAdminView(); 
+            }
+            generateCalendar(currentCalendarDate);
+            
+            // Re-render main header from settings (if available)
+            if (AppData.settings) {
+                 document.getElementById('mainTitleDisplay').innerHTML = `<i class="bi bi-house-heart-fill"></i> ${sanitizeHTML(AppData.settings.MainTitle) || t('mainTitle')}`; // Assumes 'mainTitle' key exists
+                 document.getElementById('mainSubtitleDisplay').textContent = AppData.settings.MainSubtitle || t('mainSubtitle');
+            }
+        }
+        // --- END NEW ---
+
+
+        // --- Helper: Show Loading ---
+        const showLoading = (isLoading) => {
+            loadingOverlay.style.display = isLoading ? 'flex' : 'none';
+        };
+
+        // --- Helper: Show Result Modal ---
+        // UPDATED: Use translation function
+        const showResult = (status, messageKey, replacements = {}) => {
+            document.getElementById('resultModalLabel').textContent = (status === 'success') ? t('statusSuccess') : t('statusError');
+            document.getElementById('resultModalBody').innerHTML = `<p class="${status === 'success' ? 'text-success' : 'text-danger'}">${t(messageKey, replacements)}</p>`;
+            resultModal.show();
+        };
+
+        // --- Helper: Post Data to GAS ---
+        // UPDATED: Use translation function in catch block
+        const postData = async (payload) => {
+            showLoading(true);
+            try {
+                // MODIFIED: Added 'updateSettings' to token check
+                if (authToken && ['addCategory', 'updateCategory', 'deleteCategory', 'addItem', 'deleteItem', 'checkoutBooking', 'updateSettings'].includes(payload.action)) {
+                    payload.token = authToken;
+                }
+                const response = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                });
+                const result = await response.json();
+                if (result.status !== 'success') throw new Error(result.message || 'defaultError');
+                return result;
+            } catch (error) {
+                if (error.message.includes("Invalid or expired session")) {
+                    alert(t('sessionExpired'));
+                    authToken = null;
+                    adminView.style.display = 'none';
+                    userView.style.display = 'block';
+                    myBookingsBtn.style.display = '';
+                    adminLoginBtn.style.display = '';
+                    loginModal.show();
+                } else {
+                    showResult('error', error.message); // Already a key or default message
+                }
+            } finally {
+                showLoading(false);
+            }
+        };
+
+        // ========== LOGIN / LOGOUT LOGIC ==========
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payload = {
+                action: 'login',
+                username: e.target.username.value,
+                password: e.target.password.value,
+            };
+            const result = await postData(payload);
+            if (result && result.token) {
+                authToken = result.token;
+                loginModal.hide();
+                userView.style.display = 'none';
+                adminView.style.display = 'block';
+                myBookingsBtn.style.display = 'none';
+                adminLoginBtn.style.display = 'none';
+                renderAdminView();
+            }
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            authToken = null;
+            adminView.style.display = 'none';
+            userView.style.display = 'block';
+            myBookingsBtn.style.display = '';
+            adminLoginBtn.style.display = '';
+            document.getElementById('loginForm').reset();
+            // No need to call init() here, just show the user view elements
+        });
+
+
+        // ========== ADMIN PANEL LOGIC ==========
+
+        const renderBookingReport = () => {
+            const tableBody = document.getElementById('bookingReportTableBody');
+            tableBody.innerHTML = '';
+
+            const bookings = AppData.allBookings;
+            if (!bookings || bookings.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="9" class="text-center">...</td></tr>'; // Will be translated
+                return;
+            }
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            bookings.sort((a, b) => {
+                // Sort by checkout status first (not checked out comes first), then by date
+                const checkedOutA = !!a.checkoutTimestamp;
+                const checkedOutB = !!b.checkoutTimestamp;
+                if (checkedOutA !== checkedOutB) {
+                    return checkedOutA ? 1 : -1; // Not checked out first
+                }
+                return new Date(b.bookingDate) - new Date(a.bookingDate); // Then newest first
+            });
+
+
+            bookings.forEach(booking => {
+                const bookingDate = new Date(booking.bookingDate);
+                bookingDate.setHours(0,0,0,0);
+
+                let statusHtml = '';
+                let actionButtonHtml = '';
+                const bookingIdSanitized = sanitizeHTML(booking.timestamp); // Sanitize ID once
+
+                // Check if already checked out
+                if (booking.checkoutTimestamp) {
+                    statusHtml = `<span class="badge bg-secondary" title="..."><i class="bi bi-check-all"></i> ...</span>`; // Will be translated
+                    actionButtonHtml = `
+                        <button class="btn btn-sm btn-secondary" disabled><i class="bi bi-check-all"></i> ...</button>
+                        <button class="btn btn-sm btn-outline-info info-btn" data-timestamp="${sanitizeHTML(booking.checkoutTimestamp)}" title="...">
+                            <i class="bi bi-info-circle"></i>
+                        </button>
+                    `;
+                } else {
+                    // Not checked out, determine if overdue or normal
+                    if (bookingDate < today) {
+                        statusHtml = '<span class="badge bg-danger" title="..."><i class="bi bi-exclamation-triangle-fill"></i> ...</span>';
+                    } else {
+                        statusHtml = '<span class="badge bg-success" title="..."><i class="bi bi-clock-history"></i> ...</span>';
+                    }
+                     actionButtonHtml = `
+                        <button class="btn btn-sm btn-outline-success checkout-btn" data-booking-id="${bookingIdSanitized}" title="...">
+                            <i class="bi bi-check2-circle"></i> ...
+                        </button>
+                    `;
+                }
+
+
+                const item = booking.carItem || booking.facilityItem || 'N/A';
+                const time = booking.carTime || booking.facilityTime || '--:--';
+
+                const rowHtml = `
+                    <tr data-row-id="${bookingIdSanitized}"> <td>${statusHtml}</td>
+                        <td>${sanitizeHTML(booking.bookingDate)}</td>
+                        <td>${sanitizeHTML(time)}</td>
+                        <td>${sanitizeHTML(booking.category)}</td>
+                        <td>${sanitizeHTML(item)}</td>
+                        <td>${sanitizeHTML(booking.name)}</td>
+                        <td>${sanitizeHTML(booking.houseNo)}</td>
+                        <td>${sanitizeHTML(booking.phone)}</td>
+                        <td class="action-cell">${actionButtonHtml}</td>
+                    </tr>
+                `;
+                tableBody.insertAdjacentHTML('beforeend', rowHtml);
+            });
+        };
+
+        // Event listener for Checkout and Info Buttons
+        // UPDATED: Use translation function
+        document.getElementById('bookingReportTableBody').addEventListener('click', async (e) => {
+            const checkoutBtn = e.target.closest('.checkout-btn');
+            const infoBtn = e.target.closest('.info-btn');
+
+            if (checkoutBtn) {
+                const bookingId = checkoutBtn.dataset.bookingId;
+                const row = checkoutBtn.closest('tr'); // Get the table row
+
+                if (confirm(t('confirmCheckout', { bookingId: bookingId }))) {
+                    console.log(`Calling checkoutBooking for ID: ${bookingId}`);
+                    const result = await postData({ action: 'checkoutBooking', bookingId: bookingId });
+		
+if (result && result.checkoutTimestamp) {
+                        // 1. แจ้งผู้ใช้ว่าสำเร็จ
+                        showResult('success', 'checkoutSuccess', { bookingId: bookingId });
+                        
+                        // 2. (NEW) สั่งให้ init() ทำงานใหม่ทั้งหมด
+                        //    เพื่อดึงข้อมูล (getFrontendData) ที่อัปเดตแล้วจาก Backend
+                        //    (true) หมายถึง "ให้คงภาษาเดิมไว้"
+                        init(true); 
+
+                    } else {
+                         showResult('error', 'checkoutError');
+                    }
+                    
+                }
+            } else if (infoBtn) {
+                const checkoutTime = infoBtn.dataset.timestamp;
+                alert(`${t('checkoutInfoPrefix')}\n${checkoutTime}`);
+            }
+        });
+
+        // MODIFIED: Added logic to populate settings form
+        const renderAdminView = () => {
+            const categoryList = document.getElementById('category-list');
+            categoryList.innerHTML = '';
+            AppData.categories.forEach(cat => {
+                categoryList.insertAdjacentHTML('beforeend', `
+                    <div class="card mb-3 category-edit-card">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="card-title mb-1"><i class="bi ${sanitizeHTML(cat.icon || 'bi-star-fill')}"></i> ${sanitizeHTML(cat.name)}</h5>
+                                <p class="card-text text-muted mb-0">${sanitizeHTML(cat.description)}</p>
+                            </div>
+                            <div>
+                                <button class="btn btn-outline-primary btn-sm edit-category-btn" data-name="${sanitizeHTML(cat.name)}">...</button>
+                                <button class="btn btn-outline-danger btn-sm delete-category-btn" data-name="${sanitizeHTML(cat.name)}">...</button>
+                            </div>
+                        </div>
+                    </div>
+                `);
+            });
+
+            renderBookingReport();
+
+            // --- NEW: Populate settings form ---
+            if (AppData.settings) {
+                document.getElementById('settingMainTitle').value = AppData.settings.MainTitle || '';
+                document.getElementById('settingMainSubtitle').value = AppData.settings.MainSubtitle || '';
+            }
+            // --- END NEW ---
+        };
+
+        // UPDATED: Use translation function
+        const openCategoryModal = (category = null) => {
+            const form = document.getElementById('categoryForm');
+            form.reset();
+            document.getElementById('categoryIcon').value = 'bi-star-fill';
+            document.querySelectorAll('#closedDaysCheckboxes input').forEach(cb => cb.checked = false);
+            document.querySelectorAll('#closedMonthsCheckboxes input').forEach(cb => cb.checked = false);
+            document.getElementById('categoryModalTitle').textContent = category ? t('categoryModalTitleEdit') : t('categoryModalTitleAdd');
+
+            if (category) {
+                const originalCategory = AppData.categories.find(c => c.name === category.name);
+                document.getElementById('originalCategoryName').value = originalCategory ? originalCategory.name : '';
+                document.getElementById('categoryName').value = category.name;
+                document.getElementById('categoryIcon').value = category.icon || 'bi-star-fill';
+                document.getElementById('categoryDescription').value = category.description;
+                document.getElementById('categoryFormType').value = category.formType;
+                // document.getElementById('categoryAllowDuplicates').checked = category.allowDuplicates; // This is now controlled by formType
+                if (category.closedDays) {
+                    category.closedDays.split(',').forEach(dayIndex => {
+                        const cb = document.querySelector(`#closedDaysCheckboxes input[value="${dayIndex}"]`);
+                        if(cb) cb.checked = true;
+                    });
+                }
+                if (category.closedMonths) {
+                    category.closedMonths.split(',').forEach(monthIndex => {
+                        const cb = document.querySelector(`#closedMonthsCheckboxes input[value="${monthIndex}"]`);
+                        if(cb) cb.checked = true;
+                    });
+                }
+            } else {
+                 document.getElementById('originalCategoryName').value = '';
+            }
+            renderItemList(category ? category.name : null);
+
+            // --- NEW: Set and disable the duplicates checkbox based on form type ---
+            const formTypeDropdown = document.getElementById('categoryFormType');
+            const allowDuplicatesCheckbox = document.getElementById('categoryAllowDuplicates');
+            const isFacility = (formTypeDropdown.value === 'Facility');
+            
+            allowDuplicatesCheckbox.checked = isFacility;
+            allowDuplicatesCheckbox.disabled = true;
+            // --- END NEW ---
+
+            categoryModal.show();
+        };
+
+        // --- NEW: Link Category Form Type to Allow Duplicates checkbox ---
+        document.getElementById('categoryFormType').addEventListener('input', function() {
+            const allowDuplicatesCheckbox = document.getElementById('categoryAllowDuplicates');
+            const isFacility = (this.value === 'Facility'); // 'Facility' = อนุญาตจองซ้ำ
+            allowDuplicatesCheckbox.checked = isFacility;
+            allowDuplicatesCheckbox.disabled = true; // ปิดการใช้งานเสมอ
+        });
+
+        const renderItemList = (categoryName) => {
+            const itemList = document.getElementById('itemList');
+            itemList.innerHTML = '';
+            if (categoryName && AppData.items[categoryName]) {
+                AppData.items[categoryName].forEach(itemName => {
+                    itemList.insertAdjacentHTML('beforeend', `
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            ${sanitizeHTML(itemName)}
+                            <button class="btn btn-danger btn-sm delete-item-btn" data-item-name="${sanitizeHTML(itemName)}" type="button"><i class="bi bi-trash"></i></button>
+                        </li>
+                    `);
+                });
+            }
+        };
+
+        document.getElementById('addCategoryBtn').addEventListener('click', () => openCategoryModal());
+        adminView.addEventListener('click', e => {
+            const editBtn = e.target.closest('.edit-category-btn');
+            const deleteBtn = e.target.closest('.delete-category-btn');
+
+            if (editBtn) {
+                const category = AppData.categories.find(c => c.name === editBtn.dataset.name);
+                openCategoryModal(category);
+            }
+            if (deleteBtn) {
+                 if (confirm(t('cancelBookingConfirm'))) { // Re-using translation, maybe create a new one
+                    postData({
+                        action: 'deleteCategory',
+                        payload: { name: deleteBtn.dataset.name }
+                    }).then(res => { if(res) init(true); }); // Pass true to keep lang
+                }
+            }
+        });
+
+        // UPDATED: Use translation function
+        document.getElementById('saveCategoryBtn').addEventListener('click', async () => {
+            const closedDays = Array.from(document.querySelectorAll('#closedDaysCheckboxes input:checked')).map(cb => cb.value);
+            const closedMonths = Array.from(document.querySelectorAll('#closedMonthsCheckboxes input:checked')).map(cb => cb.value);
+
+            if (closedDays.length > 0 && closedMonths.length === 0) {
+                alert(t('closureMonthWarning'));
+                return;
+            }
+
+            const payload = {
+                originalName: document.getElementById('originalCategoryName').value,
+                name: document.getElementById('categoryName').value,
+                description: document.getElementById('categoryDescription').value,
+                icon: document.getElementById('categoryIcon').value,
+                // allowDuplicates: document.getElementById('categoryAllowDuplicates').checked, // This is now set by formType
+                closedDays: closedDays.join(','),
+                closedMonths: closedMonths.join(','),
+                formType: document.getElementById('categoryFormType').value
+            };
+            const action = payload.originalName ? 'updateCategory' : 'addCategory';
+
+            const result = await postData({ action, payload });
+            if (result) {
+                categoryModal.hide();
+                init(true); // Pass true to keep lang
+            }
+        });
+
+        document.getElementById('addItemBtn').addEventListener('click', async () => {
+            const categoryName = document.getElementById('categoryName').value;
+            const itemName = document.getElementById('newItemName').value;
+            if (!categoryName || !itemName) return;
+
+            const result = await postData({
+                action: 'addItem',
+                payload: { categoryName, itemName }
+            });
+
+            if (result) {
+                document.getElementById('newItemName').value = '';
+                if (!AppData.items[categoryName]) AppData.items[categoryName] = [];
+                AppData.items[categoryName].push(itemName);
+                renderItemList(categoryName);
+            }
+        });
+
+        document.getElementById('itemList').addEventListener('click', async e => {
+            const deleteBtn = e.target.closest('.delete-item-btn');
+            if(deleteBtn) {
+                const categoryName = document.getElementById('categoryName').value;
+                const itemName = deleteBtn.dataset.itemName;
+
+                const result = await postData({
+                    action: 'deleteItem',
+                    payload: { categoryName, itemName }
+                });
+
+                if(result) {
+                    if (AppData.items[categoryName]) {
+                        AppData.items[categoryName] = AppData.items[categoryName].filter(i => i !== itemName);
+                        renderItemList(categoryName);
+                    }
+                }
+            }
+        });
+
+        // --- NEW: Settings Form Submit ---
+        // UPDATED: Use translation function
+        document.getElementById('settingsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const mainTitle = document.getElementById('settingMainTitle').value;
+            const mainSubtitle = document.getElementById('settingMainSubtitle').value;
+
+            const result = await postData({
+                action: 'updateSettings',
+                payload: { mainTitle, mainSubtitle }
+            });
+
+            if (result) {
+                showResult('success', 'saveSettingsSuccess');
+                // Update local AppData so it's correct without a full refresh
+                AppData.settings.MainTitle = mainTitle;
+                AppData.settings.MainSubtitle = mainSubtitle;
+                // Update the display in case admin logs out
+                document.getElementById('mainTitleDisplay').innerHTML = `<i class="bi bi-house-heart-fill"></i> ${sanitizeHTML(mainTitle)}`;
+                document.getElementById('mainSubtitleDisplay').textContent = mainSubtitle;
+            }
+        });
+        // --- END NEW ---
+
+
+        // ========== USER VIEW LOGIC ==========
+        const renderUserView = () => {
+            choiceCardContainer.innerHTML = '';
+            AppData.categories.forEach(cat => {
+                // [MODIFIED] Use new IG-like post structure
+                choiceCardContainer.insertAdjacentHTML('beforeend', `
+                    <div class="choice-card" data-category-name='${sanitizeHTML(cat.name)}'>
+                        
+                        <div class="choice-card-header">
+                            <i class="bi ${sanitizeHTML(cat.icon || 'bi-star-fill')}"></i>
+                            <div class="choice-card-header-text">
+                                <h3>${sanitizeHTML(cat.name)}</h3>
+                            </div>
+                        </div>
+
+                        <div class="choice-card-body">
+                            <p>${sanitizeHTML(cat.description)}</p>
+                        </div>
+
+                    </div>
+                `);
+            });
+        };
+
+        choiceCardContainer.addEventListener('click', e => {
+            const card = e.target.closest('.choice-card');
+            if (card) {
+                try {
+                    // --- UPDATED LOGIC ---
+                    // 1. Get the name from the attribute
+                    const categoryName = card.dataset.categoryName; 
+                    
+                    // 2. Find the full category object from our AppData state
+                    const categoryData = AppData.categories.find(c => c.name === categoryName);
+
+                    // 3. Open modal if found
+                    if (categoryData) {
+                        openBookingModal(categoryData);
+                    } else {
+                        console.error("Could not find category data for:", categoryName);
+                    }
+                    // --- END UPDATED LOGIC ---
+
+                } catch(err) {
+                    console.error("Failed to parse category data:", err);
+                }
+            }
+        });
+
+        // UPDATED: Use translation function
+        const getThaiDay = (dayIndex) => t(`day${['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dayIndex]}`);
+        const getThaiMonth = (monthIndex) => t(`month${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][monthIndex]}`);
+
+
+        // --- UPDATED FUNCTION (flatpickr implementation) ---
+        // This is the version from the previous step
+        const openBookingModal = (category) => {
+            const form = document.getElementById('bookingForm');
+            form.reset();
+
+            // --- NEW: Clear flatpickr instance ---
+            bookingDateFlatpickrInstance.clear();
+            // --- END NEW ---
+
+            document.getElementById('bookingModalTitle').textContent = category.name;
+            form.querySelector('[name="categoryName"]').value = category.name;
+            form.dataset.category = JSON.stringify(category);
+
+            const itemSelect = form.querySelector('[name="itemName"]');
+            itemSelect.innerHTML = `<option selected disabled value="">...</option>`; // Will be translated
+            (AppData.items[category.name] || []).forEach(item => {
+                itemSelect.insertAdjacentHTML('beforeend', `<option value="${sanitizeHTML(item)}">${sanitizeHTML(item)}</option>`);
+            });
+
+            ['Car', 'Facility'].forEach(type => {
+                form.querySelectorAll(`.form-fields-${type.toLowerCase()}`).forEach(el => {
+                    const isCorrectType = category.formType === type;
+                    el.style.display = isCorrectType ? '' : 'none';
+                    el.querySelectorAll('input, textarea, select').forEach(input => input.required = isCorrectType);
+                });
+            });
+
+            const noticeDiv = document.getElementById('generalClosureNotice');
+            if (category.closedDays && category.closedMonths && category.closedDays.length > 0 && category.closedMonths.length > 0) {
+                const days = category.closedDays.split(',').map(getThaiDay).join(', ');
+                const months = category.closedMonths.split(',').map(getThaiMonth).join(', ');
+
+                noticeDiv.innerHTML = `<i class="bi bi-info-circle-fill"></i> <strong>...:</strong> ... ${sanitizeHTML(days)} ... ${sanitizeHTML(months)}`; // Will be translated
+                noticeDiv.style.display = 'block';
+            } else {
+                noticeDiv.innerHTML = '';
+                noticeDiv.style.display = 'none';
+            }
+            
+            // 1. Get recurring closed days/months from the category
+            const closedDays = category.closedDays ? category.closedDays.split(',').map(Number) : [];
+            const closedMonths = category.closedMonths ? category.closedMonths.split(',').map(Number) : [];
+
+            // --- NEW LOGIC: Define disable rules based on category ---
+            const disableRules = [];
+
+            // Rule A: Disable dates that are already booked (Only if formType is 'Car' / duplicates NOT allowed)
+         
+            // (If formType is 'Facility', Rule A is skipped, allowing dates to be selected)
+
+            // Rule B: Disable recurring closed days (Always applies)
+            disableRules.push(function(date) {
+                if (closedDays.length === 0 || closedMonths.length === 0) {
+                    return false; // No recurring closure rules
+                }
+                const day = date.getDay(); // 0=Sun, 1=Mon, ...
+                const month = date.getMonth(); // 0=Jan, 1=Feb, ...
+                
+                // Disable if day AND month match
+                return closedDays.includes(day) && closedMonths.includes(month);
+            });
+            // --- END NEW LOGIC ---
+
+
+            // 2. Set the 'disable' rules for flatpickr
+            bookingDateFlatpickrInstance.set('disable', disableRules); // <-- Use the dynamic rules
+
+            // 3. Set an onChange handler to show the warning message (replaces old checkDateClosure logic)
+            // UPDATED: Use translation function
+            bookingDateFlatpickrInstance.set('onChange', function(selectedDates, dateStr, instance) {
+                const noticeDiv = form.querySelector('.date-closure-notice');
+                const submitBtn = form.querySelector('button[type="submit"]');
+                // --- เพิ่มตัวแปร itemSelect ---
+                const itemSelect = form.querySelector('[name="itemName"]');
+
+                // --- 1. Reset (Enable) ทุก Option ก่อน ---
+                itemSelect.querySelectorAll('option').forEach(opt => {
+                    if (opt.value) { // ไม่ยุ่งกับ option แรก (placeholder)
+                        opt.disabled = false;
+                        // ดึงชื่อเดิมกลับมา (ตัด (จองแล้ว) ทิ้ง)
+                        opt.textContent = opt.value; 
+                    }
+                });
+                
+                noticeDiv.textContent = '';
+                submitBtn.disabled = false; // Re-enable first
+
+                if (selectedDates.length > 0) {
+                    const selectedDateStr = instance.formatDate(selectedDates[0], "Y-m-d");
+                    
+                    // 2. ตรวจสอบ Closure Days (โค้ดเดิมของคุณ)
+                    const date = selectedDates[0];
+                    const day = date.getDay();
+                    const month = date.getMonth();
+                    
+                    // (ตรวจสอบให้แน่ใจว่าการเปรียบเทียบ .includes() ใช้ String)
+                    if (category.closedDays && category.closedMonths && category.closedDays.includes(day.toString()) && category.closedMonths.includes(month.toString())) {
+                         noticeDiv.textContent = t('ERR_CLOSED_DAY');
+                         submitBtn.disabled = true;
+                    }
+
+                    // --- 3. ตรวจสอบ Active Bookings (ตรรกะใหม่) ---
+                    // (เฉพาะถ้า formType เป็น 'Car' และยังไม่โดน disable จากข้อ 2)
+                    if (category.formType === 'Car' && !submitBtn.disabled) {
+                        
+                        // ตรวจสอบว่า AppData.activeBookingsByItem ถูกโหลดมาถูกต้อง
+                        const activeItems = (AppData.activeBookingsByItem && AppData.activeBookingsByItem[selectedDateStr]) ? AppData.activeBookingsByItem[selectedDateStr] : [];
+                        
+                        if (activeItems.length > 0) {
+                            activeItems.forEach(itemName => {
+                                // ค้นหา option ที่มี value ตรงกับชื่อรถ (ต้อง Sanitize ชื่อที่มีการเว้นวรรคหรืออักขระพิเศษด้วย)
+                                const option = itemSelect.querySelector(`option[value="${itemName.replace(/"/g, '\\"')}"]`);
+                                if (option) {
+                                    option.disabled = true;
+                                    option.textContent = `${option.value} (จองแล้ว)`; // เพิ่มข้อความบอก
+                                }
+                            });
+                        }
+                    }
+                }
+            });
+            // --- END REPLACEMENT ---
+
+            bookingModal.show();
+        };
+
+
+        // --- Calendar Logic ---
+        // UPDATED: Use translation function
+        let currentCalendarDate = new Date();
+        const generateCalendar = (date) => {
+            const calendarDaysHeader = document.getElementById('calendar-days-header');
+            calendarDaysHeader.innerHTML = '';
+            
+            // --- UPDATED ---
+            const daysHeader = (currentLang === 'th') 
+                ? ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'] 
+                : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            daysHeader.forEach(day => calendarDaysHeader.insertAdjacentHTML('beforeend', `<div class="calendar-day-header">${day}</div>`));
+            // --- END UPDATED ---
+
+            calendarBody.innerHTML = '';
+            const month = date.getMonth();
+            const year = date.getFullYear();
+
+            // --- UPDATED ---
+            const monthName = (currentLang === 'th')
+                ? date.toLocaleString('th-TH', { month: 'long' })
+                : date.toLocaleString('en-US', { month: 'long' });
+            const displayYear = (currentLang === 'th') ? year + 543 : year;
+            monthYearEl.textContent = `${monthName} ${displayYear}`;
+            // --- END UPDATED ---
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            for (let i = 0; i < firstDay; i++) { calendarBody.insertAdjacentHTML('beforeend', '<div></div>'); }
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                let bookingClass = '';
+                let dayStrAttr = '';
+                if (AppData.bookings[dayStr]) {
+                const dayData = AppData.bookings[dayStr];
+                dayStrAttr = `data-day-str="${dayStr}"`; // ทำให้คลิกได้ถ้ามีข้อมูล
+
+                // --- NEW LOGIC (V3) ---
+                // 1. ตรวจสอบ "All Checked Out" (สีเขียว) ก่อน
+                if (dayData.allCheckedOut) {
+                    bookingClass = 'all-checked-out';
+                } 
+                // 2. ถ้าไม่ ให้ตรวจสอบ Active (สีแดง/น้ำเงิน/ม่วง)
+                else if (dayData.hasActiveCar && dayData.hasActiveFacility) {
+                    bookingClass = 'both-booked';
+                } else if (dayData.hasActiveCar) {
+                    bookingClass = 'car-booked';
+                } else if (dayData.hasActiveFacility) {
+                    bookingClass = 'facility-booked';
+                }
+                // (ถ้าไม่มี Active Booking แต่ก็ยังไม่ All Checked Out 
+                //  เช่น มี 1 Active, 1 Checked Out -> มันจะเข้าเงื่อนไข Active ปกติ
+                //  ถ้ามีแค่ Checked Out -> มันจะเข้าเงื่อนไข allCheckedOut
+                //  ตรรกะนี้ถูกต้องแล้ว)
+                // --- END NEW LOGIC (V3) ---
+            }
+                calendarBody.insertAdjacentHTML('beforeend', `<div class="calendar-day ${bookingClass}" ${dayStrAttr}>${day}</div>`);
+            }
+        };
+        document.getElementById('prev-month-btn').addEventListener('click', () => { currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1); generateCalendar(currentCalendarDate); });
+        document.getElementById('next-month-btn').addEventListener('click', () => { currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1); generateCalendar(currentCalendarDate); });
+
+        // --- Booking Form Submission ---
+        // UPDATED: Use translation function
+        document.getElementById('bookingForm').addEventListener('submit', async e => {
+            e.preventDefault();
+            const form = e.target;
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            data.action = 'submitBooking';
+
+            const fileInput = form.querySelector('[name="file"]');
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                const reader = new FileReader();
+                reader.onloadend = async () => {
+                    data.fileData = reader.result.split(',')[1];
+                    data.fileName = file.name;
+                    data.fileType = file.type;
+                    const result = await postData(data);
+                    if (result) {
+                        bookingModal.hide();
+                        showResult('success', 'bookingSuccess');
+                        init(true); // Pass true to keep lang
+                    }
+                };
+                reader.readAsDataURL(file);
+            } else {
+                const result = await postData(data);
+                if (result) {
+                    bookingModal.hide();
+                    showResult('success', 'bookingSuccess');
+                    init(true); // Pass true to keep lang
+                }
+            }
+        });
+
+
+        // --- "My Bookings" Feature Logic ---
+        // UPDATED: Use translation function
+        document.getElementById('myBookingsForm').addEventListener('submit', async e => {
+            e.preventDefault();
+            const phone = document.getElementById('checkPhone').value;
+            console.log("Searching for phone:", phone); // Log
+            currentUserPhone = phone;
+            const payload = { action: 'getMyBookings', phone: phone };
+
+            const result = await postData(payload);
+
+            if (result && result.bookings) {
+                console.log("Bookings found:", result.bookings); // Log
+                const list = document.getElementById('myBookingsList');
+                list.innerHTML = '';
+                if (result.bookings.length === 0) {
+                    list.innerHTML = `<li class="list-group-item">${t('noBookingsFound')}</li>`;
+                } else {
+                    result.bookings.forEach(booking => {
+                        const item = booking.carItem || booking.facilityItem;
+                        const time = booking.carTime || booking.facilityTime;
+                        list.insertAdjacentHTML('beforeend', `
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>${sanitizeHTML(booking.bookingDate)} (${sanitizeHTML(time)})</strong>: ${sanitizeHTML(item)}
+                                    <br><small class="text-muted">${sanitizeHTML(booking.category)}</small>
+                                </div>
+                                <button class="btn btn-danger btn-sm cancel-booking-btn" data-booking-id="${sanitizeHTML(booking.timestamp)}">
+                                    <i class="bi bi-trash"></i> ...
+                                </button>
+                            </li>
+                        `);
+                    });
+                }
+                myBookingsModal.hide();
+                myBookingsListModal.show();
+            } else if (result) {
+                 console.log("getMyBookings action exists but returned no bookings or an unexpected format.");
+                 const list = document.getElementById('myBookingsList');
+                 list.innerHTML = `<li class="list-group-item">${t('noBookingsFound')}</li>`;
+                 myBookingsModal.hide();
+                 myBookingsListModal.show();
+            } else {
+                 console.log("postData might have failed or handled an error.");
+            }
+        });
+
+        // "My Bookings" Cancel Button Click
+        // UPDATED: Use translation function
+        document.getElementById('myBookingsList').addEventListener('click', async e => {
+            const cancelBtn = e.target.closest('.cancel-booking-btn');
+            if (!cancelBtn) return;
+
+            const bookingId = cancelBtn.dataset.bookingId;
+            if (confirm(t('cancelBookingConfirm'))) {
+                const result = await postData({
+                    action: 'cancelBooking',
+                    bookingId: bookingId,
+                    phone: currentUserPhone
+                });
+
+                if (result) {
+                    showResult('success', 'cancelBookingSuccess');
+                    cancelBtn.closest('li').remove();
+                    init(true); // Pass true to keep lang
+                }
+            }
+        });
+
+        // --- "Detailed Calendar" Feature Logic ---
+        calendarBody.addEventListener('click', e => {
+            const dayEl = e.target.closest('.calendar-day');
+            if (dayEl && dayEl.dataset.dayStr) {
+                openDayDetailsModal(dayEl.dataset.dayStr);
+            }
+        });
+
+        // UPDATED: Use translation function
+        const openDayDetailsModal = (dayStr) => {
+            const list = document.getElementById('dayDetailsList');
+            const title = document.getElementById('dayDetailsModalTitle');
+            list.innerHTML = '';
+
+            const date = new Date(dayStr);
+            // Title will be set by setLanguage function
+            
+            // This now uses AppData.allBookings (which has the 'name' property)
+            const bookingsForDay = AppData.allBookings
+                .filter(b => b.bookingDate === dayStr)
+                .sort((a,b) => (a.carTime || a.facilityTime || '').localeCompare(b.carTime || b.facilityTime || ''));
+
+            if (bookingsForDay.length === 0) {
+                 list.innerHTML = `<li class="list-group-item">${t('noBookingsForDay')}</li>`;
+            } else {
+                bookingsForDay.forEach(booking => {
+                const item = booking.carItem || booking.facilityItem;
+                const time = booking.carTime || booking.facilityTime;
+
+                // --- NEW: Add status indicator ---
+                let statusIndicator = '';
+                let textClass = '';
+                if (booking.checkoutTimestamp) { // ตรวจสอบว่ามีการ Check out หรือยัง
+                    statusIndicator = `<i class="bi bi-check-circle-fill text-success ms-2" title="Checked Out"></i>`;
+                    textClass = 'text-muted'; // ทำให้ข้อความจางลง
+                }
+                // --- END NEW ---
+
+                list.insertAdjacentHTML('beforeend', `
+                    <li class="list-group-item ${textClass}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>${sanitizeHTML(time)}</strong>: ${sanitizeHTML(item)}
+                                <br><small>(${sanitizeHTML(booking.category)} / ${t('bookedBy')}: ${sanitizeHTML(booking.name)})</small>
+                            </div>
+                            ${statusIndicator}
+                        </div>
+                    </li>
+                `);
+            });
+            }
+
+            dayDetailsModal.show();
+        };
+
+
+        // ========== INITIALIZATION ==========
+
+        // --- NEW: Add event listener for language switch ---
+        document.getElementById('langSwitchBtn').addEventListener('click', () => {
+            const newLang = (currentLang === 'th') ? 'en' : 'th';
+            setLanguage(newLang);
+        });
+
+
+        // ADDED: Initialize flatpickr once on load
+        bookingDateFlatpickrInstance = flatpickr(
+            document.querySelector('#bookingForm [name="bookingDate"]'), 
+            {
+                dateFormat: "Y-m-d", // Format ที่ backend รับ
+                locale: "th",      // ใช้ภาษาไทย
+                minDate: "today"   // ปิดการใช้งานวันที่ผ่านมา
+                // 'disable' rules will be set dynamically when the modal opens
+            }
+        );
+
+        // UPDATED: Use translation function
+        const init = async (keepLang = false) => {
+            showLoading(true);
+            try {
+                const response = await fetch(`${WEB_APP_URL}?action=getFrontendData&v=${new Date().getTime()}`);
+                const data = await response.json();
+                if (data.status !== 'success') throw new Error(data.message);
+
+                AppData = data;
+                AppData.activeBookingsByItem = data.activeBookingsByItem || {};
+                // --- NEW: Populate header text ---
+                if (AppData.settings) {
+                    document.getElementById('mainTitleDisplay').innerHTML = `<i class="bi bi-house-heart-fill"></i> ${sanitizeHTML(AppData.settings.MainTitle) || t('mainTitle')}`;
+                    document.getElementById('mainSubtitleDisplay').textContent = AppData.settings.MainSubtitle || t('mainSubtitle');
+                }
+                // --- END NEW ---
+
+                renderUserView();
+
+                if (authToken) {
+                    userView.style.display = 'none';
+                    adminView.style.display = 'block';
+                    myBookingsBtn.style.display = 'none';
+                    adminLoginBtn.style.display = 'none';
+                    renderAdminView();
+                } else {
+                    userView.style.display = 'block';
+                    adminView.style.display = 'none';
+                    myBookingsBtn.style.display = '';
+                    adminLoginBtn.style.display = '';
+                }
+
+                generateCalendar(currentCalendarDate);
+                
+                // --- NEW: Apply saved language ---
+                if (!keepLang) {
+                    const savedLang = localStorage.getItem('bookingLang') || 'th';
+                    setLanguage(savedLang);
+                } else {
+                    setLanguage(currentLang); // Re-apply current language
+                }
+                // --- END NEW ---
+                
+            } catch (error) {
+                alert(`Initialization failed: ${error.message}`);
+                userView.style.display = 'block';
+                adminView.style.display = 'none';
+                myBookingsBtn.style.display = '';
+                adminLoginBtn.style.display = '';
+            } finally {
+                showLoading(false);
+            }
+        };
+
+        init();
+
+    })();
+    </script>
+</body>
+</html>
